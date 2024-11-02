@@ -1,11 +1,10 @@
-import './App.css';
-import SlotMachine from './SlotMachine'; 
+import Slot from './Slot'
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <SlotMachine /> 
+        <Slot/> 
       </header>
     </div>
   );
