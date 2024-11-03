@@ -12,8 +12,11 @@ import {
     FillGradient,
 } from 'pixi.js';
 
+let appInitialized = false;
 
 const Slot = async () => {
+    if (appInitialized) return;
+    appInitialized = true;
 
     const app = new Application();
     await app.init({ resizeTo: window });
@@ -27,28 +30,38 @@ const Slot = async () => {
 
 
     await Assets.load([
-        '/assets/7.png',
-        '/assets/bell.png',
+        '/assets/7blue.png',
+        '/assets/apple.png',
+        '/assets/banana.png',
+        '/assets/bar.png',
+        '/assets/berry.png',
         '/assets/cherry.png',
         '/assets/diamond.png',
         '/assets/grape.png',
-        '/assets/lemon.png',
         '/assets/orange.png',
-        '/assets/watermelon.png',
+        '/assets/melon.png',
+        '/assets/redFruit.png',
+        '/assets/trifoi.png',
     ]);
 
     const REEL_WIDTH = 170;
     const SYMBOL_SIZE = 140;
 
     const slotTextures = [
-        Texture.from('/assets/7.png'),
-        Texture.from('/assets/bell.png'),
+        Texture.from('/assets/7blue.png'),
+        Texture.from('/assets/apple.png'),
+        Texture.from('/assets/banana.png'),
+        Texture.from('/assets/bar.png'),
+        Texture.from('/assets/berry.png'),
         Texture.from('/assets/cherry.png'),
         Texture.from('/assets/diamond.png'),
         Texture.from('/assets/grape.png'),
-        Texture.from('/assets/lemon.png'),
         Texture.from('/assets/orange.png'),
-        Texture.from('/assets/watermelon.png'),
+        Texture.from('/assets/melon.png'),
+        Texture.from('/assets/redFruit.png'),
+        Texture.from('/assets/trifoi.png'),
+
+
     ];
 
     const reels = [];
@@ -89,9 +102,9 @@ const Slot = async () => {
     const totalReelWidth = REEL_WIDTH * 5;
     reelContainer.x = (app.screen.width - totalReelWidth) / 2;
 
-   
-    const top = new Graphics().rect(0, 0, app.screen.width,margin).fill({ color: 0x0 });
-    const bottom = new Graphics().rect(0, SYMBOL_SIZE * 3 +  margin,app.screen.width,margin).fill({ color: 0x0 });
+
+    const top = new Graphics().rect(0, 0, app.screen.width, margin).fill({ color: 0x0 });
+    const bottom = new Graphics().rect(0, SYMBOL_SIZE * 3 + margin, app.screen.width, margin).fill({ color: 0x0 });
 
     const fill = new FillGradient(0, 0, 0, 36 * 1.7);
     const colors = [0xffffff, 0x00ff99].map((color) => Color.shared.setValue(color).toNumber());
@@ -117,11 +130,12 @@ const Slot = async () => {
         wordWrap: true,
         wordWrapWidth: 440,
     });
+
     //button code
     const buttonBackground = new Graphics();
-    buttonBackground.beginFill(0x3333ff); 
-    buttonBackground.lineStyle(2, 0xffffff); 
-    buttonBackground.drawRoundedRect(0, 0, 225, 60, 15); 
+    buttonBackground.beginFill(0x3333ff);
+    buttonBackground.lineStyle(2, 0xffffff);
+    buttonBackground.drawRoundedRect(0, 0, 235, 60, 15);
     buttonBackground.endFill();
     buttonBackground.x = Math.round((app.screen.width - buttonBackground.width) / 2);
     buttonBackground.y = app.screen.height - margin + Math.round((margin - buttonBackground.height) / 2);
@@ -139,7 +153,7 @@ const Slot = async () => {
         startPlay();
     })
     //button code end
-    
+
     const headerText = new Text('SLOTS FRUITS!', style);
     headerText.x = Math.round((top.width - headerText.width) / 2);
     headerText.y = Math.round((margin - headerText.height) / 2);
