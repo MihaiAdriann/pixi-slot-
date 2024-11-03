@@ -12,18 +12,20 @@ import {
     FillGradient,
 } from 'pixi.js';
 
-const Slot = async () =>
-{
-    // Create a new application
+
+const Slot = async () => {
+
     const app = new Application();
-
-    // Initialize the application
-    await app.init({ background: '#1099bb', resizeTo: window });
-
-    // Append the application canvas to the document body
+    await app.init({ resizeTo: window });
     document.body.appendChild(app.canvas);
 
-    // Load the textures
+    const bgTexture = await Assets.load('/assets/background.png');
+    const bg = new Sprite(bgTexture);
+    bg.width = app.screen.width;
+    bg.height = app.screen.height;
+    app.stage.addChild(bg);
+
+
     await Assets.load([
         '/assets/7.png',
         '/assets/bell.png',
@@ -36,9 +38,8 @@ const Slot = async () =>
     ]);
 
     const REEL_WIDTH = 170;
-    const SYMBOL_SIZE = 140; // Dimensiunea fixă a simbolurilor
+    const SYMBOL_SIZE = 140;
 
-    // Create different slot symbols
     const slotTextures = [
         Texture.from('/assets/7.png'),
         Texture.from('/assets/bell.png'),
@@ -50,14 +51,11 @@ const Slot = async () =>
         Texture.from('/assets/watermelon.png'),
     ];
 
-    // Build the reels
     const reels = [];
     const reelContainer = new Container();
 
-    for (let i = 0; i < 5; i++)
-    {
+    for (let i = 0; i < 5; i++) {
         const rc = new Container();
-
         rc.x = i * REEL_WIDTH;
         reelContainer.addChild(rc);
 
@@ -73,17 +71,12 @@ const Slot = async () =>
         reel.blur.blurY = 0;
         rc.filters = [reel.blur];
 
-        // Build the symbols
-        for (let j = 0; j < 5; j++)
-        {
+        for (let j = 0; j < 5; j++) {
             const symbol = new Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
-            
-            // Scale the symbol to fit the symbol area.
-            symbol.width = SYMBOL_SIZE;  // Set width
-            symbol.height = SYMBOL_SIZE; // Set height
-            symbol.x = Math.round((REEL_WIDTH - SYMBOL_SIZE) / 2); // Center the symbol horizontally
-            symbol.y = j * SYMBOL_SIZE; // Set vertical position
-            
+            symbol.width = SYMBOL_SIZE;
+            symbol.height = SYMBOL_SIZE;
+            symbol.x = Math.round((REEL_WIDTH - SYMBOL_SIZE) / 2);
+            symbol.y = j * SYMBOL_SIZE;
             reel.symbols.push(symbol);
             rc.addChild(symbol);
         }
@@ -91,37 +84,29 @@ const Slot = async () =>
     }
     app.stage.addChild(reelContainer);
 
-    // Build top & bottom covers and position reelContainer
     const margin = (app.screen.height - SYMBOL_SIZE * 3) / 2;
-
     reelContainer.y = margin;
+    const totalReelWidth = REEL_WIDTH * 5;
+    reelContainer.x = (app.screen.width - totalReelWidth) / 2;
 
-    // Center the reelContainer horizontally
-    const totalReelWidth = REEL_WIDTH * 5; // 5 reels
-    reelContainer.x = (app.screen.width - totalReelWidth) / 2; // Centering
+   
+    const top = new Graphics().rect(0, 0, app.screen.width,margin).fill({ color: 0x0 });
+    const bottom = new Graphics().rect(0, SYMBOL_SIZE * 3 +  margin,app.screen.width,margin).fill({ color: 0x0 });
 
-    const top = new Graphics().rect(0, 0, app.screen.width, margin).fill({ color: 0x0 });
-    const bottom = new Graphics().rect(0, SYMBOL_SIZE * 3 + margin, app.screen.width, margin).fill({ color: 0x0 });
-
-    // Create gradient fill
     const fill = new FillGradient(0, 0, 0, 36 * 1.7);
-
     const colors = [0xffffff, 0x00ff99].map((color) => Color.shared.setValue(color).toNumber());
 
-    colors.forEach((number, index) =>
-    {
+    colors.forEach((number, index) => {
         const ratio = index / colors.length;
-
         fill.addColorStop(ratio, number);
     });
 
-    // Add play text
     const style = new TextStyle({
         fontFamily: 'Arial',
         fontSize: 36,
         fontStyle: 'italic',
         fontWeight: 'bold',
-        fill: 0xffff00 ,
+        fill: 0xffff00,
         stroke: { color: 0x4a1850, width: 5 },
         dropShadow: {
             color: 0x000000,
@@ -132,16 +117,30 @@ const Slot = async () =>
         wordWrap: true,
         wordWrapWidth: 440,
     });
+    //button code
+    const buttonBackground = new Graphics();
+    buttonBackground.beginFill(0x3333ff); 
+    buttonBackground.lineStyle(2, 0xffffff); 
+    buttonBackground.drawRoundedRect(0, 0, 225, 60, 15); 
+    buttonBackground.endFill();
+    buttonBackground.x = Math.round((app.screen.width - buttonBackground.width) / 2);
+    buttonBackground.y = app.screen.height - margin + Math.round((margin - buttonBackground.height) / 2);
 
-    const playText = new Text('Spin!', style);
+    const playText = new Text('Spin to WIN!', style);
+    playText.x = (buttonBackground.width - playText.width) / 2;
+    playText.y = (buttonBackground.height - playText.height) / 2;
 
-    playText.x = Math.round((bottom.width - playText.width) / 2);
-    playText.y = app.screen.height - margin + Math.round((margin - playText.height) / 2);
-    bottom.addChild(playText);
+    buttonBackground.addChild(playText);
+    bottom.addChild(buttonBackground);
 
-    // Add header text
+    buttonBackground.interactive = true;
+    buttonBackground.cursor = 'pointer';
+    buttonBackground.addListener('pointerdown', () => {
+        startPlay();
+    })
+    //button code end
+    
     const headerText = new Text('SLOTS FRUITS!', style);
-
     headerText.x = Math.round((top.width - headerText.width) / 2);
     headerText.y = Math.round((margin - headerText.height) / 2);
     top.addChild(headerText);
@@ -149,24 +148,19 @@ const Slot = async () =>
     app.stage.addChild(top);
     app.stage.addChild(bottom);
 
-    // Set the interactivity.
     playText.eventMode = 'static';
     playText.cursor = 'pointer';
-    playText.addListener('pointerdown', () =>
-    {
+    playText.addListener('pointerdown', () => {
         startPlay();
     });
 
     let running = false;
 
-    // Function to start playing.
-    function startPlay()
-    {
+    function startPlay() {
         if (running) return;
         running = true;
 
-        for (let i = 0; i < reels.length; i++)
-        {
+        for (let i = 0; i < reels.length; i++) {
             const r = reels[i];
             const extra = Math.floor(Math.random() * 3);
             const target = r.position + 10 + i * 5 + extra;
@@ -176,48 +170,33 @@ const Slot = async () =>
         }
     }
 
-    // Reels done handler.
-    function reelsComplete()
-    {
+    function reelsComplete() {
         running = false;
     }
 
-    // Listen for animate update.
-    app.ticker.add(() =>
-    {
-        // Update the slots.
-        for (let i = 0; i < reels.length; i++)
-        {
+    app.ticker.add(() => {
+        for (let i = 0; i < reels.length; i++) {
             const r = reels[i];
-            // Update blur filter y amount based on speed.
             r.blur.blurY = (r.position - r.previousPosition) * 8;
             r.previousPosition = r.position;
 
-            // Update symbol positions on reel.
-            for (let j = 0; j < r.symbols.length; j++)
-            {
+            for (let j = 0; j < r.symbols.length; j++) {
                 const s = r.symbols[j];
                 const prevy = s.y;
-
                 s.y = ((r.position + j) % r.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
-                if (s.y < 0 && prevy > SYMBOL_SIZE)
-                {
-                    // Detect going over and swap a texture.
+                if (s.y < 0 && prevy > SYMBOL_SIZE) {
                     s.texture = slotTextures[Math.floor(Math.random() * slotTextures.length)];
-                    // Reapply size and centering
-                    s.width = SYMBOL_SIZE;  
-                    s.height = SYMBOL_SIZE; 
+                    s.width = SYMBOL_SIZE;
+                    s.height = SYMBOL_SIZE;
                     s.x = Math.round((REEL_WIDTH - SYMBOL_SIZE) / 2);
                 }
             }
         }
     });
 
-    // Very simple tweening utility function. This should be replaced with a proper tweening library in a real product.
     const tweening = [];
 
-    function tweenTo(object, property, target, time, easing, onchange, oncomplete)
-    {
+    function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
         const tween = {
             object,
             property,
@@ -231,75 +210,57 @@ const Slot = async () =>
         };
 
         tweening.push(tween);
-
         return tween;
     }
-    
-    // Listen for animate update.
-    app.ticker.add(() =>
-    {
+
+    app.ticker.add(() => {
         const now = Date.now();
         const remove = [];
 
-        for (let i = 0; i < tweening.length; i++)
-        {
+        for (let i = 0; i < tweening.length; i++) {
             const t = tweening[i];
             const phase = Math.min(1, (now - t.start) / t.time);
 
             t.object[t.property] = lerp(t.propertyBeginValue, t.target, t.easing(phase));
             if (t.change) t.change(t);
-            if (phase === 1)
-            {
+            if (phase === 1) {
                 t.object[t.property] = t.target;
                 if (t.complete) t.complete(t);
                 remove.push(t);
             }
         }
-        for (let i = 0; i < remove.length; i++)
-        {
+        for (let i = 0; i < remove.length; i++) {
             tweening.splice(tweening.indexOf(remove[i]), 1);
         }
     });
 
     let resizeTimeout;
 
-function resize() {
-    if (resizeTimeout) clearTimeout(resizeTimeout);
-    
-    resizeTimeout = setTimeout(() => {
-        const scale = Math.min(window.innerWidth / app.view.width, window.innerHeight / app.view.height);
-        
-        // Set the new width and height
-        app.view.style.width = `${app.view.width * scale}px`;
-        app.view.style.height = `${app.view.height * scale}px`;
-        
-        // Recenter the reel container
-        const totalReelWidth = REEL_WIDTH * 5; // 5 reels
-        reelContainer.x = (app.screen.width - totalReelWidth) / 2; // Centering
-        reelContainer.y = (app.screen.height - SYMBOL_SIZE * 3) / 2; // Re-center vertically
-    }, 100); // Ajustează timpul după cum este necesar
-}
+    function resize() {
+        if (resizeTimeout) clearTimeout(resizeTimeout);
 
-// Creează un observer pentru a observa schimbările de dimensiune a ferestrei
-const resizeObserver = new ResizeObserver(() => {
+        resizeTimeout = setTimeout(() => {
+            const scale = Math.min(window.innerWidth / app.view.width, window.innerHeight / app.view.height);
+            app.view.style.width = `${app.view.width * scale}px`;
+            app.view.style.height = `${app.view.height * scale}px`;
+            const totalReelWidth = REEL_WIDTH * 5;
+            reelContainer.x = (app.screen.width - totalReelWidth) / 2;
+            reelContainer.y = (app.screen.height - SYMBOL_SIZE * 3) / 2;
+        }, 100);
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+        resize();
+    });
+
     resize();
-});
+    resizeObserver.observe(document.body);
 
-// Apelează resize pentru a seta dimensiunile corecte la început
-resize();
-
-// Observă dimensiunea ferestrei
-resizeObserver.observe(document.body);
-
-    // Basic lerp function.
-    function lerp(a1, a2, t)
-    {
+    function lerp(a1, a2, t) {
         return a1 * (1 - t) + a2 * t;
     }
 
-    // Backout function from tweenjs.
-    function backout(amount)
-    {
+    function backout(amount) {
         return (t) => --t * t * ((amount + 1) * t + amount) + 1;
     }
 };
